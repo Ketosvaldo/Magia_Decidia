@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "WeaponBase.h"
 
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values
 AWeaponBase::AWeaponBase()
 {
@@ -27,5 +29,11 @@ void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 {
 	if(OtherActor == this)
 		return;
+	const UWorld* World = GetWorld();
+	if(World == nullptr)
+		return;
+	const FVector SpawnLocation = SweepResult.Location;
+	UGameplayStatics::SpawnEmitterAtLocation(World, ImpactEffect, SpawnLocation);
+	UGameplayStatics::SpawnSoundAtLocation(World, ImpactSound, SpawnLocation);
 	Destroy();
 }
