@@ -29,17 +29,27 @@ class MAGIA_DECIDIA_API AWeaponBase : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AWeaponBase();
+
+protected:
+	UFUNCTION()
+	virtual void BeginPlay();
+public:
 	
 	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
 	float Speed;
 	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
 	float Gravity;
+	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
+	bool bIsHoming;
 	UPROPERTY(EditAnywhere, Category=Effects)
 	UParticleSystem* ImpactEffect;
 	UPROPERTY(EditAnywhere, Category=Sounds)
 	USoundBase* ImpactSound;
+	UPROPERTY(EditAnywhere, Category = Target)
+	AActor* Target;
 
 	UFUNCTION()
 	void OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-	
+
+	void RotateToTarget() const;
 };
