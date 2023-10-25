@@ -36,7 +36,7 @@ void AWeaponBase::BeginPlay()
 	Super::BeginPlay();
 	if(bIsItem)
 		return;
-	TSubclassOf<ACharacter> CharacterClass = ACharacter::StaticClass();
+	const TSubclassOf<ACharacter> CharacterClass = ACharacter::StaticClass();
 	TArray<AActor*> FoundCharacters;
 	if(Target == nullptr)
 	{
@@ -45,14 +45,13 @@ void AWeaponBase::BeginPlay()
 		float ActualDistance = NULL;
 		for(int i = 0; i < FoundCharacters.Num(); i++)
 		{
-			if(FoundCharacters[i] != GetOwner())
+			const float ActorDistance = GetDistanceTo(FoundCharacters[i]);
+			if(ActorDistance < 65)
+				MyActor = FoundCharacters[i];
+			if(ActorDistance < ActualDistance && ActorDistance > 65 || !ActualDistance)
 			{
-				const float ActorDistance = GetDistanceTo(FoundCharacters[i]);
-				if(ActorDistance < ActualDistance && ActorDistance > 65 || !ActualDistance)
-				{
-					ActorTarget = FoundCharacters[i];
-					ActualDistance = ActorDistance;
-				}
+				ActorTarget = FoundCharacters[i];
+				ActualDistance = ActorDistance;
 			}
 		}
 		Target = ActorTarget;
@@ -71,7 +70,7 @@ void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 {
 	if(bIsItem)
 		return;
-	if(OtherActor == GetOwner())
+	if(OtherActor == MyActor)
 		return;
 	const UWorld* World = GetWorld();
 	if(World == nullptr)
@@ -81,20 +80,15 @@ void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 		UGameplayStatics::SpawnEmitterAtLocation(World, ImpactEffect, SpawnLocation);
 	if(ImpactSound != nullptr)
 		UGameplayStatics::SpawnSoundAtLocation(World, ImpactSound, SpawnLocation);
-	MakeDamage();
+	MakeDamage(OtherActor);
+	Destroy();
 }
 
 void AWeaponBase::RotateToTarget() const
 {
-	GEngine->AddOnScreenDebugMessage(
-		-1,
-		15.f,
-		FColor::Blue,
-		FString::Printf(TEXT("El valor de MyFloat es: %f"), Target->GetActorLocation().X)
-		);
-	FVector PlayerLocation = GetActorLocation();
-	FVector TargetLocation = Target->GetActorLocation();
-	FVector Velocity = FVector(TargetLocation - PlayerLocation).GetSafeNormal();
+	const FVector PlayerLocation = GetActorLocation();
+	const FVector TargetLocation = Target->GetActorLocation();
+	const FVector Velocity = FVector(TargetLocation - PlayerLocation).GetSafeNormal();
 	ProjectileMovement->Velocity = Velocity * Speed;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 }
