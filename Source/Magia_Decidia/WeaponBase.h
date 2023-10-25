@@ -35,7 +35,7 @@ protected:
 	virtual void BeginPlay();
 public:
 	
-	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category=ProjectileSettings)
 	float Speed;
 	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
 	float Gravity;
@@ -44,19 +44,22 @@ public:
 	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
 	bool bShouldDestroy;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=ProjectileSettings)
-    bool bIsItem;
+	bool bIsItem;
 	UPROPERTY(EditAnywhere, Category=Effects)
 	UParticleSystem* ImpactEffect;
 	UPROPERTY(EditAnywhere, Category=Sounds)
 	USoundBase* ImpactSound;
 	UPROPERTY(EditAnywhere, Category = Target)
 	AActor* Target;
+	UPROPERTY()
+	AActor* MyActor;
 
 	UFUNCTION()
 	void OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-	
+
+	UFUNCTION(BlueprintCallable)
 	void RotateToTarget() const;
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void MakeDamage();
+	void MakeDamage(AActor* TargetActor);
 };
