@@ -8,7 +8,7 @@
 AWeaponBase::AWeaponBase()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OverlapBegin);
@@ -24,13 +24,17 @@ AWeaponBase::AWeaponBase()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(BoxCollision);
 
+	Speed = 500.f;
 	Target = nullptr;
 	bShouldDestroy = true;
+	bIsItem = false;
 }
 
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
+	if(bIsItem)
+		return;
 	TSubclassOf<ACharacter> CharacterClass = ACharacter::StaticClass();
 	TArray<AActor*> FoundCharacters;
 	if(Target == nullptr)
@@ -50,6 +54,12 @@ void AWeaponBase::BeginPlay()
 				}
 			}
 		}
+		GEngine->AddOnScreenDebugMessage(
+		-1,
+		15.f,
+		FColor::Blue,
+		ActorTarget->GetActorNameOrLabel()
+		);
 		Target = ActorTarget;
 		RotateToTarget();
 	}
@@ -64,7 +74,9 @@ void AWeaponBase::BeginPlay()
 void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(OtherActor == this)
+	if(bIsItem)
+		return;
+	if(OtherActor == GetOwner())
 		return;
 	const UWorld* World = GetWorld();
 	if(World == nullptr)
@@ -75,8 +87,6 @@ void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 	if(ImpactSound != nullptr)
 		UGameplayStatics::SpawnSoundAtLocation(World, ImpactSound, SpawnLocation);
 	MakeDamage();
-	if(bShouldDestroy)
-	Destroy();
 }
 
 void AWeaponBase::RotateToTarget() const
