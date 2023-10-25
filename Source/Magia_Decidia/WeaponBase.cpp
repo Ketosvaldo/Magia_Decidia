@@ -9,7 +9,7 @@ AWeaponBase::AWeaponBase()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OverlapBegin);
 	
@@ -24,7 +24,8 @@ AWeaponBase::AWeaponBase()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(BoxCollision);
 
-	Speed = 500.f;
+	Speed = 800.f;
+	
 	Target = nullptr;
 	bShouldDestroy = true;
 	bIsItem = false;
@@ -47,19 +48,13 @@ void AWeaponBase::BeginPlay()
 			if(FoundCharacters[i] != GetOwner())
 			{
 				const float ActorDistance = GetDistanceTo(FoundCharacters[i]);
-				if(ActorDistance < ActualDistance || !ActualDistance)
+				if(ActorDistance < ActualDistance && ActorDistance > 65 || !ActualDistance)
 				{
 					ActorTarget = FoundCharacters[i];
 					ActualDistance = ActorDistance;
 				}
 			}
 		}
-		GEngine->AddOnScreenDebugMessage(
-		-1,
-		15.f,
-		FColor::Blue,
-		ActorTarget->GetActorNameOrLabel()
-		);
 		Target = ActorTarget;
 		RotateToTarget();
 	}
@@ -91,8 +86,15 @@ void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 
 void AWeaponBase::RotateToTarget() const
 {
-	const FVector PlayerLocation = GetActorLocation();
-	const FVector TargetLocation = Target->GetActorLocation();
-	const FVector Velocity = FVector(TargetLocation - PlayerLocation).GetSafeNormal();
-	ProjectileMovement->SetVelocityInLocalSpace(Velocity * Speed);
+	GEngine->AddOnScreenDebugMessage(
+		-1,
+		15.f,
+		FColor::Blue,
+		FString::Printf(TEXT("El valor de MyFloat es: %f"), Target->GetActorLocation().X)
+		);
+	FVector PlayerLocation = GetActorLocation();
+	FVector TargetLocation = Target->GetActorLocation();
+	FVector Velocity = FVector(TargetLocation - PlayerLocation).GetSafeNormal();
+	ProjectileMovement->Velocity = Velocity * Speed;
+	ProjectileMovement->bRotationFollowsVelocity = true;
 }
