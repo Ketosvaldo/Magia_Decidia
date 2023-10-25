@@ -8,8 +8,8 @@
 AWeaponBase::AWeaponBase()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
-
+	PrimaryActorTick.bCanEverTick = true;
+	
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OverlapBegin);
 	
@@ -24,14 +24,19 @@ AWeaponBase::AWeaponBase()
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
 	MeshComponent->SetupAttachment(BoxCollision);
 
+	Speed = 800.f;
+	
 	Target = nullptr;
 	bShouldDestroy = true;
+	bIsItem = false;
 }
 
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
-	TSubclassOf<ACharacter> CharacterClass = ACharacter::StaticClass();
+	if(bIsItem)
+		return;
+	const TSubclassOf<ACharacter> CharacterClass = ACharacter::StaticClass();
 	TArray<AActor*> FoundCharacters;
 	if(Target == nullptr)
 	{
@@ -40,14 +45,13 @@ void AWeaponBase::BeginPlay()
 		float ActualDistance = NULL;
 		for(int i = 0; i < FoundCharacters.Num(); i++)
 		{
-			if(FoundCharacters[i] != GetOwner())
+			const float ActorDistance = GetDistanceTo(FoundCharacters[i]);
+			if(ActorDistance < 65)
+				MyActor = FoundCharacters[i];
+			if(ActorDistance < ActualDistance && ActorDistance > 65 || !ActualDistance)
 			{
-				const float ActorDistance = GetDistanceTo(FoundCharacters[i]);
-				if(ActorDistance < ActualDistance || !ActualDistance)
-				{
-					ActorTarget = FoundCharacters[i];
-					ActualDistance = ActorDistance;
-				}
+				ActorTarget = FoundCharacters[i];
+				ActualDistance = ActorDistance;
 			}
 		}
 		Target = ActorTarget;
@@ -64,7 +68,9 @@ void AWeaponBase::BeginPlay()
 void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(OtherActor == this)
+	if(bIsItem)
+		return;
+	if(OtherActor == MyActor)
 		return;
 	const UWorld* World = GetWorld();
 	if(World == nullptr)
@@ -74,8 +80,7 @@ void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 		UGameplayStatics::SpawnEmitterAtLocation(World, ImpactEffect, SpawnLocation);
 	if(ImpactSound != nullptr)
 		UGameplayStatics::SpawnSoundAtLocation(World, ImpactSound, SpawnLocation);
-	MakeDamage();
-	if(bShouldDestroy)
+	MakeDamage(OtherActor);
 	Destroy();
 }
 
@@ -84,5 +89,6 @@ void AWeaponBase::RotateToTarget() const
 	const FVector PlayerLocation = GetActorLocation();
 	const FVector TargetLocation = Target->GetActorLocation();
 	const FVector Velocity = FVector(TargetLocation - PlayerLocation).GetSafeNormal();
-	ProjectileMovement->SetVelocityInLocalSpace(Velocity * Speed);
+	ProjectileMovement->Velocity = Velocity * Speed;
+	ProjectileMovement->bRotationFollowsVelocity = true;
 }
