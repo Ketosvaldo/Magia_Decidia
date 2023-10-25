@@ -43,7 +43,7 @@ public:
 	bool bIsHoming;
 	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
 	bool bShouldDestroy;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=ProjectileSettings)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=ProjectileSettings, meta=(ExposeOnSpawn = "true"))
 	bool bIsItem;
 	UPROPERTY(EditAnywhere, Category=Effects)
 	UParticleSystem* ImpactEffect;
