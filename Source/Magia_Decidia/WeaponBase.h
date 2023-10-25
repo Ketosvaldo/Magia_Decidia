@@ -41,6 +41,8 @@ public:
 	float Gravity;
 	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
 	bool bIsHoming;
+	UPROPERTY(EditAnywhere, Category=ProjectileSettings)
+	bool bShouldDestroy;
 	UPROPERTY(EditAnywhere, Category=Effects)
 	UParticleSystem* ImpactEffect;
 	UPROPERTY(EditAnywhere, Category=Sounds)
@@ -50,6 +52,9 @@ public:
 
 	UFUNCTION()
 	void OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
+	
 	void RotateToTarget() const;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void MakeDamage();
 };

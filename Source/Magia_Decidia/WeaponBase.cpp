@@ -25,6 +25,7 @@ AWeaponBase::AWeaponBase()
 	MeshComponent->SetupAttachment(BoxCollision);
 
 	Target = nullptr;
+	bShouldDestroy = true;
 }
 
 void AWeaponBase::BeginPlay()
@@ -69,8 +70,12 @@ void AWeaponBase::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor*
 	if(World == nullptr)
 		return;
 	const FVector SpawnLocation = SweepResult.Location;
-	UGameplayStatics::SpawnEmitterAtLocation(World, ImpactEffect, SpawnLocation);
-	UGameplayStatics::SpawnSoundAtLocation(World, ImpactSound, SpawnLocation);
+	if(ImpactEffect != nullptr)
+		UGameplayStatics::SpawnEmitterAtLocation(World, ImpactEffect, SpawnLocation);
+	if(ImpactSound != nullptr)
+		UGameplayStatics::SpawnSoundAtLocation(World, ImpactSound, SpawnLocation);
+	MakeDamage();
+	if(bShouldDestroy)
 	Destroy();
 }
 
